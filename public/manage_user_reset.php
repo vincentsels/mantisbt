@@ -33,6 +33,8 @@
  * @uses user_api.php
  */
 
+use MantisBT\Exception\Authentication\LostPasswordDisabled;
+
 /**
  * MantisBT Core API's
  */
@@ -64,7 +66,7 @@ $t_user = user_get_row( $f_user_id );
 access_ensure_global_level( $t_user['access_level'] );
 
 if ( !helper_call_custom_function( 'auth_can_change_password', array() ) ) {
-	trigger_error( ERROR_LOST_PASSWORD_NOT_ENABLED, ERROR );
+	throw new LostPasswordDisabled();
 }
 
 $t_result = user_reset_password( $f_user_id );
