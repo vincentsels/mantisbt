@@ -33,10 +33,12 @@
 	require_once( 'file_api.php' );
 	require_once( 'custom_field_api.php' );
 	require_once( 'last_visited_api.php' );
+	require_once( 'ajax_api.php' );
 	require_once( 'projax_api.php' );
 	require_once( 'collapse_api.php' );
 
-	$f_master_bug_id = gpc_get_int( 'm_id', 0 );
+	$f_master_bug_id 	= gpc_get_int( 'm_id', 0 );
+	$f_reporter_id		= auth_get_current_user_id();
 
 	# this page is invalid for the 'All Project' selection except if this is a clone
 	if ( ( ALL_PROJECTS == helper_get_current_project() ) && ( 0 == $f_master_bug_id ) ) {
@@ -93,6 +95,10 @@
 		$f_due_date				= $t_bug->due_date;
 
 		$t_project_id			= $t_bug->project_id;
+		
+		if ( config_get( 'keep_original_reporter_on_clone' ) == ON ) {
+			$f_reporter_id		= $t_bug->reporter_id;
+		}
 	} else {
 	    access_ensure_project_level( config_get( 'report_bug_threshold' ) );
 
@@ -153,7 +159,11 @@
 	$tpl_show_due_date = in_array( 'due_date', $t_fields ) && access_has_project_level( config_get( 'due_date_update_threshold' ), helper_get_current_project(), auth_get_current_user_id() );
 	$tpl_show_attachments = in_array( 'attachments', $t_fields ) && file_allow_bug_upload();
 	$tpl_show_view_state = in_array( 'view_state', $t_fields ) && access_has_project_level( config_get( 'set_view_status_threshold' ) );
-
+	
+	if ( $f_master_bug_id > 0 && config_get( 'show_reporter_on_clone' ) == ON ) {
+		$tpl_show_reporter = true;
+	}
+	
 	# don't index bug report page
 	html_robots_noindex();
 
@@ -165,6 +175,7 @@
 <div align="center">
 <form name="report_bug_form" method="post" <?php if ( $tpl_show_attachments ) { echo 'enctype="multipart/form-data"'; } ?> action="bug_report.php">
 <?php echo form_security_field( 'bug_report' ) ?>
+<input type="hidden" name="reporter_id" value="<?php echo $f_reporter_id ?>" />
 <table class="width90" cellspacing="1">
 	<tr>
 		<td class="form-title" colspan="2">
@@ -175,6 +186,26 @@
 	</tr>
 <?php
 	event_signal( 'EVENT_REPORT_BUG_FORM_TOP', array( $t_project_id ) );
+	
+	if ( $tpl_show_reporter ) {
+?>
+		<tr <?php echo helper_alternate_class() ?>>
+			<td class="category">
+				<?php echo lang_get( 'reporter' ) ?>
+			</td>
+			<td>
+			<?php 
+			if ( ON == config_get( 'use_javascript' ) ) {
+				echo ajax_click_to_edit( prepare_user_name( $f_reporter_id ), 'reporter_id', 'entrypoint=issue_reporter_combobox&issue_id=' . $t_bug->id );
+			} else {
+			?>
+				<select <?php echo helper_get_tab_index() ?> name="reporter_id">
+					<?php print_reporter_option_list( $f_reporter_id, $t_project_id ); ?>
+				</select>
+			<?php } ?>
+			</td>
+		</tr>
+<?php }
 
 	if ( $tpl_show_category ) {
 ?>

@@ -94,7 +94,7 @@
 
 	$t_bug_data->project_id			= $t_project_id;
 
-	$t_bug_data->reporter_id		= auth_get_current_user_id();
+	$t_bug_data->reporter_id		= gpc_get_int( 'reporter_id', auth_get_current_user_id() );
 
 	$t_bug_data->summary			= trim( $t_bug_data->summary );
 

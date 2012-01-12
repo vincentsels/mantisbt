@@ -2722,6 +2722,19 @@
 	 * @global int $g_set_configuration_threshold
 	 */
 	$g_set_configuration_threshold = ADMINISTRATOR;
+	
+	/**
+	 * Upon cloning a bug, allows a user with sufficient privileges to change the reporter.
+	 * @global int $g_show_reporter_on_clone
+	 */
+	$g_show_reporter_on_clone = OFF;
+	
+	/**
+	 * Specify whether upon cloning a bug, the reporter should be kept the same as the original (ON)
+	 * or the reporter should become the person cloning the ticket (OFF).
+	 * @global int $g_keep_original_reporter_on_clone
+	 */
+	$g_keep_original_reporter_on_clone = OFF;
 
 	/************************************
 	 * MantisBT Look and Feel Variables *
