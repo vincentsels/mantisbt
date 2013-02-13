@@ -1192,7 +1192,7 @@
 	 * Default relationship between a new bug and its parent when cloning it
 	 * @global int $g_default_bug_relationship_clone
 	 */
-	$g_default_bug_relationship_clone = BUG_REL_NONE;
+	$g_default_bug_relationship_clone = BUG_RELATED;
 
 	/**
 	 * Default global category to be used when an issue is moved from a project to another

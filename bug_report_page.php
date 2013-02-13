@@ -88,6 +88,10 @@
 		$f_due_date				= $t_bug->due_date;
 
 		$t_project_id			= $t_bug->project_id;
+
+        if ( gpc_isset( 'category_id' ) ) {
+            $f_category_id = gpc_get_int( 'category_id' );
+        }
 	} else {
 		# Get Project Id and set it as current
 		$t_project_id = gpc_get_int( 'project_id', helper_get_current_project() );
@@ -579,7 +583,15 @@
 			<?php echo lang_get( 'relationship_with_parent' ) ?>
 		</td>
 		<td>
-			<?php relationship_list_box( config_get( 'default_bug_relationship_clone' ), "rel_type", false, true ) ?>
+            <?php
+                $t_rel = BUG_REL_NONE;
+                if ( gpc_isset( 'rel_type' ) ) {
+                    $t_rel = gpc_get_int( 'rel_type' );
+                } else {
+                    $t_rel = config_get( 'default_bug_relationship_clone' );
+                }
+                relationship_list_box( $t_rel, "rel_type", false, true );
+            ?>
 			<?php echo '<b>' . lang_get( 'bug' ) . ' ' . bug_format_id( $f_master_bug_id ) . '</b>' ?>
 		</td>
 	</tr>
