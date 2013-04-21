@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with MantisBT.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** Colognian (Ripoarisch)
+/** Korean (한국어)
  * 
  * See the qqq 'language' for message documentation incl. usage of parameters
  * To improve a translation please visit http://translatewiki.net
@@ -25,17 +25,16 @@
  * @ingroup Language
  * @file
  *
- * @author Purodha
+ * @author Changwoo
  */
 
-$s_plugin_format_title = 'MantisBT Fommatteeerung';
-$s_plugin_format_description = 'Dat offizjälle Zohsatzprojramm zom enshtöpselle för de Täx ze beärbeide un ze fommatteeere';
-$s_plugin_format_config = 'Enschtällunge';
-$s_plugin_format_process_text = 'Et Täx Beärrbeejde';
-$s_plugin_format_process_text_warning_notice = 'Donn dat nit affschallde, ußer De weijß jenou, wat De määß.
-Wann dat ußjeschalldt es, wääde och Anjreffe met <i lang="en" title="cross site scripting - Skrepte vun främbe Rääschner ungerschiebe">XSS</i> müjjelesch, di mer nommaal op keijne Fall hann well.';
-$s_plugin_format_process_urls = 'Et <i lang="en">URL</i> Beärrbeejde';
-$s_plugin_format_process_buglinks = 'MantisBT Lenks (Aanjelääjeheit/Notiz)';
-$s_plugin_format_process_vcslinks = '<i lang="en">VCS</i> Lengks';
-$s_plugin_format_enabled = 'Aanjeschalldt';
-$s_plugin_format_disabled = 'Ußjeschalldt';
+$s_plugin_format_title = '맨티스 서식';
+$s_plugin_format_description = '공식 텍스트 처리 및 서식 플러그인.';
+$s_plugin_format_config = '설정';
+$s_plugin_format_process_text = '텍스트 처리';
+$s_plugin_format_process_text_warning_notice = '잘 모르면 사용 중지하지 마십시오. 사용 중지 상태에서는 크로스 사이트 스크립팅(XSS) 공격을 받을 수 있습니다.';
+$s_plugin_format_process_urls = 'URL 처리';
+$s_plugin_format_process_buglinks = '맨티스 링크(이슈/이슈노트)';
+$s_plugin_format_process_vcslinks = '버전 컨트롤 링크';
+$s_plugin_format_enabled = '사용';
+$s_plugin_format_disabled = '사용 않음';

@@ -1085,14 +1085,13 @@ function filter_get_bug_rows( &$p_page_number, &$p_per_page, &$p_page_count, &$p
 	}
 
 	$t_view_type = $t_filter['_view_type'];
-	
+
 	// project query clauses must be AND-ed always, irrespective of how the filter
 	// clauses are requested by the user ( all matching -> AND, any matching -> OR )
 	$t_where_clauses = array();
-	
+
 	$t_project_where_clauses =  array(
 		"$t_project_table.enabled = " . db_param(),
-		"$t_project_table.id = $t_bug_table.project_id",
 	);
 	$t_where_params = array(
 		1,
@@ -1101,8 +1100,13 @@ function filter_get_bug_rows( &$p_page_number, &$p_per_page, &$p_page_count, &$p
 		"$t_bug_table.*",
 	);
 
-	$t_join_clauses = array();
-	$t_from_clauses = array();
+	$t_from_clauses = array(
+		$t_bug_table,
+	);
+
+	$t_join_clauses = array(
+		"JOIN $t_project_table ON $t_project_table.id = $t_bug_table.project_id",
+	);
 
 	// normalize the project filtering into an array $t_project_ids
 	if( 'simple' == $t_view_type ) {
@@ -1239,13 +1243,13 @@ function filter_get_bug_rows( &$p_page_number, &$p_per_page, &$p_page_count, &$p
 		log_event( LOG_FILTERING, 'project query = ' . $t_project_query );
 		array_push( $t_project_where_clauses, $t_project_query );
 	}
-	
+
 	# date filter
 	if(( 'on' == $t_filter[FILTER_PROPERTY_FILTER_BY_DATE] ) && is_numeric( $t_filter[FILTER_PROPERTY_START_MONTH] ) && is_numeric( $t_filter[FILTER_PROPERTY_START_DAY] ) && is_numeric( $t_filter[FILTER_PROPERTY_START_YEAR] ) && is_numeric( $t_filter[FILTER_PROPERTY_END_MONTH] ) && is_numeric( $t_filter[FILTER_PROPERTY_END_DAY] ) && is_numeric( $t_filter[FILTER_PROPERTY_END_YEAR] ) ) {
-	
+
 		$t_start_string = $t_filter[FILTER_PROPERTY_START_YEAR] . "-" . $t_filter[FILTER_PROPERTY_START_MONTH] . "-" . $t_filter[FILTER_PROPERTY_START_DAY] . " 00:00:00";
 		$t_end_string = $t_filter[FILTER_PROPERTY_END_YEAR] . "-" . $t_filter[FILTER_PROPERTY_END_MONTH] . "-" . $t_filter[FILTER_PROPERTY_END_DAY] . " 23:59:59";
-	
+
 		$t_where_params[] = strtotime( $t_start_string );
 		$t_where_params[] = strtotime( $t_end_string );
 		array_push( $t_project_where_clauses, "($t_bug_table.date_submitted BETWEEN " . db_param() . " AND " . db_param() . " )" );
@@ -1995,26 +1999,23 @@ function filter_get_bug_rows( &$p_page_number, &$p_per_page, &$p_page_count, &$p
 
 		# add text query elements to arrays
 		if ( !$t_first ) {
-			$t_from_clauses[] = "$t_bug_text_table";
-			$t_where_clauses[] = "$t_bug_table.bug_text_id = $t_bug_text_table.id";
+			$t_join_clauses[] = "JOIN $t_bug_text_table ON $t_bug_table.bug_text_id = $t_bug_text_table.id";
+			$t_join_clauses[] = "LEFT JOIN $t_bugnote_table ON $t_bug_table.id = $t_bugnote_table.bug_id";
+			# Outer join required otherwise we don't retrieve issues without notes
+			$t_join_clauses[] = "LEFT JOIN $t_bugnote_text_table ON $t_bugnote_table.bugnote_text_id = $t_bugnote_text_table.id";
 			$t_where_clauses[] = $t_textsearch_where_clause;
-			$t_join_clauses[] = " LEFT JOIN $t_bugnote_table ON $t_bug_table.id = $t_bugnote_table.bug_id";
-			$t_join_clauses[] = " LEFT JOIN $t_bugnote_text_table ON $t_bugnote_table.bugnote_text_id = $t_bugnote_text_table.id";
 		}
 	}
 
 	# End text search
-	
+
 	# Determine join operator
 	if ( $t_filter[FILTER_PROPERTY_MATCH_TYPE] == FILTER_MATCH_ANY )
 		$t_join_operator = ' OR ';
 	else
 		$t_join_operator = ' AND ';
-	
-	log_event(LOG_FILTERING, 'Join operator : ' . $t_join_operator);
 
-	$t_from_clauses[] = $t_project_table;
-	$t_from_clauses[] = $t_bug_table;
+	log_event(LOG_FILTERING, 'Join operator : ' . $t_join_operator);
 
 	$t_query_clauses['select'] = $t_select_clauses;
 	$t_query_clauses['from'] = $t_from_clauses;
@@ -2046,8 +2047,8 @@ function filter_get_bug_rows( &$p_page_number, &$p_per_page, &$p_page_count, &$p
 		$t_where_string .= implode( $t_join_operator, $t_query_clauses['where'] );
 		$t_where_string .= ' ) ';
 	}
-	
-	
+
+
 	$t_result = db_query_bound( "$t_select_string $t_from_string $t_join_string $t_where_string $t_order_string", $t_query_clauses['where_values'], $p_per_page, $t_offset );
 	$t_row_count = db_num_rows( $t_result );
 
@@ -3393,14 +3394,18 @@ function filter_draw_selection_area2( $p_page_number, $p_for_screen = true, $p_e
 		<tr class="row-1">
 			<td class="small-caption" valign="top"><a href="<?php echo $t_filters_url . FILTER_PROPERTY_MATCH_TYPE;?>" id="match_type_filter"><?php echo lang_get( 'filter_match_type' )?>:</a></td>
 			<td class="small-caption" valign="top" id="match_type_filter_target">
-			<?php 
-				if ( $t_filter[FILTER_PROPERTY_MATCH_TYPE] == FILTER_MATCH_ANY ) {
-					echo lang_get ('filter_match_any');
-				} else if ( $t_filter[FILTER_PROPERTY_MATCH_TYPE] == FILTER_MATCH_ALL ) {
-					echo lang_get ('filter_match_all');
+			<?php
+				switch( $t_filter[FILTER_PROPERTY_MATCH_TYPE] ) {
+					case FILTER_MATCH_ANY:
+						echo lang_get ('filter_match_any');
+						break;
+					case FILTER_MATCH_ALL:
+					default:
+						echo lang_get ('filter_match_all');
+						break;
 				}
 			?>
-			<input type="hidden" name="match_type" value="<?php echo $t_filter[FILTER_PROPERTY_MATCH_TYPE]?>"/>
+			<input type="hidden" name="match_type" value="<?php echo $t_filter[FILTER_PROPERTY_MATCH_TYPE] ?>"/>
 			</td>
 			<td colspan="6">&#160;</td>
 		</tr>
